@@ -15,7 +15,7 @@ class PostgreSQLConnector:
             except OperationalError:
                 print('Ocorreu um erro ao fazer a conexão com o banco de dados solicitado')
                 esc = int(input('Digite 1 para tentar novamente, 2 para inserir os parâmetros de conexão manualmente, '\
-                                'ou entre qualquer outra tecla para encerrar a aplicação.'))
+                                'ou entre qualquer outra tecla para encerrar a aplicação.\n'))
                 if esc not in [1, 2]:
                     print('Programa encerrado')
                     return None
