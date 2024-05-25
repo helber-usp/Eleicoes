@@ -1,0 +1,5 @@
+CANDIDATOS ELEITOS:
+|     ID     |              NOME              |  ID_VICE   | ID_PLEITO  |      CARGO      |  VOTOS  |  ELEITOS  |
+-------------------------------------------------------------------------------------------------------------------
+|     13     |           zé minino            |    123     |     34     |     prefeito    |    54   |     1     | 
+|     21     |            zé moço             |    321     |     35     |     vereador    |    99   |     7     | 

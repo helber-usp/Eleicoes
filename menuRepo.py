@@ -15,9 +15,10 @@ class ChoiceInteractor:
         elif choice == 3:
             return self.run_campaign_filter()
         elif choice == 4:
-            raise NotImplementedError
+            return self.run_no_record_listing()
         elif choice == 5:
-            raise NotImplementedError
+            return self.run_generate_report()
+            
 
     def run_selection(self):
         while True:
@@ -107,7 +108,36 @@ class ChoiceInteractor:
                 print(f"\n Digite o {filter_options[i]} para busca:")
                 filter_values[filter_options[i]] = input()
             
+            print('Selecione a ordenação das linhas da tabela:')
+            print('1. Ano (ascendente)')
+            print('2. Ano (descendente)')
+            print('3. Nome do candidato (A -> Z)')
+            print('4. Nome do candidato (Z -> A)')
+            print('5. Cargo (A -> Z)')
+            print('6. Cargo (Z -> A)')
+            print('Digite qualquer valor não listado para manter a ordenação padrão')
+            order_choice = input()
+            
             if valid_choices:
-                self.operator.display_campaigns(filter_values)
-                input('\nPressione qualquer tecla para voltar ao menu\n')
-                os.system('cls' if os.name == 'nt' else 'clear')
+                if order_choice in ['1', '2', '3', '4', '5', '6']:
+                    self.operator.display_campaigns(filter_values, order_choice)
+                    input('\nPressione qualquer tecla para voltar ao menu\n')
+                    os.system('cls' if os.name == 'nt' else 'clear')
+
+                else:
+                    self.operator.display_campaigns(filter_values)
+                    input('\nPressione qualquer tecla para voltar ao menu\n')
+                    os.system('cls' if os.name == 'nt' else 'clear')
+
+    def run_generate_report(self):
+        self.operator.save_elected_report()
+        print('Relatório de eleitos salvo com sucesso')
+        input('\nPressione qualquer tecla para voltar ao menu\n')
+        os.system('cls' if os.name == 'nt' else 'clear')
+        return True
+    
+    def run_no_record_listing(self):
+        self.operator.display_ficha_limpa()
+        input('\nPressione qualquer tecla para voltar ao menu\n')
+        os.system('cls' if os.name == 'nt' else 'clear')
+        return True
