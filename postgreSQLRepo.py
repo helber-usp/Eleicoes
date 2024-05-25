@@ -1,5 +1,6 @@
 import psycopg2
 from psycopg2 import OperationalError
+from time import sleep
 
 class PostgreSQLConnector:
     
@@ -33,9 +34,21 @@ class PostgreSQLOperations:
         self.connection = connector.connection
         self.cursor = self.connection.cursor()
 
-    def select(self, table):
+    def check_dataset_tables(self):
+        sql = f"""SELECT table_name FROM information_schema.tables
+                  WHERE table_schema = 'public'"""
+        try:
+            self.cursor.execute(sql)
+            results = self.cursor.fetchall()
+        except:
+            results = None
+            print('Nenhuma tabela encontrada!')
+            
+        return results
+
+    def display_selection(self, table):
         sql = f"""SELECT * FROM {table}"""
-        print(f'Executando seleção com a query: {sql}')
+        print(f'Executando seleção com a query: {sql}\n')
         try:
             self.cursor.execute(sql)
             results = self.cursor.fetchall()
@@ -43,5 +56,41 @@ class PostgreSQLOperations:
             results = None
             
         if results:
+            self.cursor.execute(f"Select * FROM {table} LIMIT 0")
+            for column in self.cursor.description:
+                print('|', column[0].upper().center(30), '|', end=' ')
+            print('\n')
+            print('-'*(len(self.cursor.description)*30 + len(self.cursor.description) + 15))
             for line in results:
-                print(line)     
+                for field in line:
+                    print('|', str(field).center(30), '|', end=' ')
+                print('\n')
+            sleep(5)
+
+
+class ChoiceInteractor:
+
+    def __init__(self, operator: PostgreSQLOperations):
+        self.operator = operator
+
+    def execute_operation(self, choice: int):
+        if choice == 1:
+            while True:
+                print('Qual tabela você deseja visualizar?\n')
+                results = self.operator.check_dataset_tables()
+                option_assign = {}
+                for index, line in enumerate(results):
+                    option_assign[str(index+1)] = line[0]
+                    print(str(index+1) + '.', line[0])
+                print('\n', 'Digite 0 para retornar ao menu anterior, ou SAIR para encerrar o programa')
+                table_choice = input().upper()
+                if table_choice not in list(option_assign.keys()) + ['0', 'SAIR']:
+                    print(f"\nO valor digitado '{choice}' não corresponde a nenhuma das opções, voltando ao menu...")
+                    sleep(2.5)
+                elif table_choice == '0':
+                    return True
+                elif table_choice == 'SAIR':
+                    return False
+                else:
+                    self.operator.display_selection(option_assign[table_choice])
+                    return True
