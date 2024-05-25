@@ -1,4 +1,5 @@
-from postgreSQLRepo import PostgreSQLConnector, PostgreSQLOperations, ChoiceInteractor
+from postgreSQLRepo import PostgreSQLConnector, PostgreSQLOperations
+from menuRepo import ChoiceInteractor
 from time import sleep
 import os
 
@@ -7,7 +8,7 @@ def main():
     connector = PostgreSQLConnector()
     executer = PostgreSQLOperations(connector)
     interactor = ChoiceInteractor(executer)
-    print('Bem vindo!')
+    print('Bem vindo!\n')
     while True:
 
         print('Digite o número da opção desejada:')
@@ -34,6 +35,7 @@ def main():
             response = interactor.execute_operation(int(choice))
             if not response:
                 break
+            os.system('cls' if os.name == 'nt' else 'clear')
 
 
 if __name__ == "__main__":
