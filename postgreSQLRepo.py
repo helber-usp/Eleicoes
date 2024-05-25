@@ -85,3 +85,43 @@ class PostgreSQLOperations:
             raise e
         self.connection.commit()
         print('Dados deletados com sucesso')
+
+    def display_campaigns(self, filters = None):
+        where = ''
+        if 'Ano' in filters.keys():
+            where += f"cd.ano = {filters['Ano']} AND "
+        
+        if 'Nome do candidato' in filters.keys():
+            where += f"i.nome = '{filters['Nome do candidato'].title()}' AND "
+
+        if 'Cargo' in filters.keys():
+            where += f"cg.nome = '{filters['Cargo'].title()}' AND "
+
+        sql = f"""SELECT cd.cpf, i.nome, cd.numero_candidato, cd.partido_id, cg.nome, cd.ano, cd.ficha_limpa
+                  FROM candidato cd
+                  JOIN individuos i
+                  ON cd.cpf = i.cpf
+                  LEFT JOIN cargos cg
+                  ON cd.cargo_id = cg.cargo_id
+                  WHERE {where}"""
+        sql = sql.strip('\n').strip(' AND ')
+        
+        try:
+            self.cursor.execute(sql)
+            results = self.cursor.fetchall()
+        except:
+            results = None
+
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print('|', 'CPF'.center(13), '|', 'NOME'.center(30), '|', 'NUMERO'.center(5), '|',
+              'PARTIDO'.center(5), '|', 'CARGO'.center(20), '|', 'ANO'.center(6), '|',
+              'FICHA_LIMPA'.center(7), '|')
+        print('-'*115)
+
+        spacing = [13, 30, 5, 5, 20, 6, 7]
+
+        if results:
+            for line in results:
+                for field, space in zip(line, spacing):
+                    print('|', str(field).center(space), end=' ')
+                print('\n')  

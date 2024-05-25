@@ -13,7 +13,7 @@ class ChoiceInteractor:
         elif choice == 2:
             return self.run_deletion()
         elif choice == 3:
-            raise NotImplementedError
+            return self.run_campaign_filter()
         elif choice == 4:
             raise NotImplementedError
         elif choice == 5:
@@ -75,3 +75,39 @@ class ChoiceInteractor:
                     self.operator.delete_data(option_assign[table_choice], key)
                     input('\nPressione qualquer tecla para voltar ao menu\n')
                     os.system('cls' if os.name == 'nt' else 'clear')
+    
+    def run_campaign_filter(self):
+        while True:
+            filter_options = {'1': 'Ano', '2': 'Nome do candidato', '3': 'Cargo'}
+            print('Baseado em quais colunas você deseja filtrar as candidaturas?')
+            print('1. Ano')
+            print('2. Nome do candidato')
+            print('3. Cargo')
+            print('Você pode escolher mais de uma opção, separadas por virgula')
+            print('Digite 0 para voltar ao menu anterior ou SAIR encerrar o programa')
+            filter_choice = input()
+
+            if filter_choice == '0':
+                return True
+            elif filter_choice.upper() == 'SAIR':
+                return False
+
+            valid_choices = True
+            filter_values = {}
+
+            for i in filter_choice.split(','):
+                i = i.strip(' ')
+                if i not in filter_options.keys():
+                    print(f"O valor inserido '{i}' não é uma opção válida.")
+                    sleep(1.5)
+                    print('\n')
+                    valid_choices = False
+                    break
+
+                print(f"\n Digite o {filter_options[i]} para busca:")
+                filter_values[filter_options[i]] = input()
+            
+            if valid_choices:
+                self.operator.display_campaigns(filter_values)
+                input('\nPressione qualquer tecla para voltar ao menu\n')
+                os.system('cls' if os.name == 'nt' else 'clear')
