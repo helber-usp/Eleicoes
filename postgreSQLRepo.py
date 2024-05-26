@@ -49,8 +49,7 @@ class PostgreSQLOperations:
 
     def display_selection(self, table):
         os.system('cls' if os.name == 'nt' else 'clear')
-        sql = f"""SELECT * FROM {table}"""
-        print(f'Executando seleção com a query: {sql}\n')
+        sql = f"""SELECT * FROM {table} LIMIT 1000"""
         try:
             self.cursor.execute(sql)
             results = self.cursor.fetchall()
@@ -59,14 +58,16 @@ class PostgreSQLOperations:
             
         if results:
             self.cursor.execute(f"Select * FROM {table} LIMIT 0")
+            def_spacing = 15 if len(self.cursor.description) >= 5 else 20
             for column in self.cursor.description:
-                print('|', column[0].upper().center(30), '|', end=' ')
+                print('|', column[0].upper().center(def_spacing), '|', end=' ')
             print('\n')
-            print('-'*(len(self.cursor.description)*30 + len(self.cursor.description) + 15))
+            print('-'*(len(self.cursor.description)*def_spacing + len(self.cursor.description) + 15))
             for line in results:
                 for field in line:
-                    print('|', str(field).center(30), '|', end=' ')
+                    print('|', str(field).center(def_spacing), '|', end=' ')
                 print('\n')
+        self.connection.commit()
 
     def delete_data(self, table, key=None):
         if key:
@@ -97,7 +98,7 @@ class PostgreSQLOperations:
         if 'Cargo' in filters.keys():
             where += f"cg.nome = '{filters['Cargo'].title()}' AND "
 
-        sql = f"""SELECT cd.cpf, i.nome, cd.numero_candidato, cd.partido_id, cg.nome, cd.ano, cd.ficha_limpa
+        sql = f"""SELECT cd.cpf, i.nome, cd.numero_candidato, cd.partido_id, cg.nome, cd.ano, i.ficha_limpa
                   FROM candidato cd
                   JOIN individuos i
                   ON cd.cpf = i.cpf
@@ -123,26 +124,30 @@ class PostgreSQLOperations:
             results = None
 
         os.system('cls' if os.name == 'nt' else 'clear')
-        print('|', 'CPF'.center(13), '|', 'NOME'.center(30), '|', 'NUMERO'.center(5), '|',
-              'PARTIDO'.center(5), '|', 'CARGO'.center(20), '|', 'ANO'.center(6), '|',
-              'FICHA_LIMPA'.center(7), '|')
-        print('-'*115)
+        print('|', 'CPF'.center(13), '|', 'NOME'.center(30), '|', 'NUMERO'.center(9), '|',
+              'PARTIDO'.center(9), '|', 'CARGO'.center(20), '|', 'ANO'.center(6), '|',
+              'FICHA_LIMPA'.center(15), '|')
+        print('-'*124)
 
-        spacing = [13, 30, 5, 5, 20, 6, 7]
+        spacing = [13, 30, 9, 9, 20, 6, 15]
 
         if results:
             for line in results:
                 for field, space in zip(line, spacing):
-                    print('| ', str(field).center(space), end=' ')
+                    print('|', str(field).center(space), end=' ')
+                print('|')
                 print('\n')
+        self.connection.commit()
 
     def save_elected_report(self):        
-        sql = f"""SELECT 
+        sql = f"""SELECT * FROM
+            (SELECT 
                     cd.candidato_id,
                     i.nome,
                     cd.vice_candidato_id AS id_vice,
                     p.pleito_id,
-                    c.nome_cargo,
+                    c.nome as nome_cargo,
+                    v.cargo_id,
                     v.quantidade_votos,
                     c.quantidade_eleitos,
                     (ROW_NUMBER() OVER (PARTITION BY v.cargo_id ORDER BY v.quantidade_votos DESC) <= c.quantidade_eleitos) AS eleito
@@ -157,37 +162,35 @@ class PostgreSQLOperations:
                 JOIN 
                     votacao v ON cd.candidato_id = v.candidato_id
                 JOIN 
-                    cargos c ON v.cargo_id = c.cargo_id 
+                    cargos c ON v.cargo_id = c.cargo_id) subquery
                 WHERE eleito = TRUE
                 ORDER BY 
-                    v.cargo_id, v.quantidade_votos DESC"""
+                   cargo_id, pleito_id, quantidade_votos DESC"""
         
         try:
             self.cursor.execute(sql)
             results = self.cursor.fetchall()
         except:
             results = None
-        
-        # results = [(13, 'zé minino', '123', '34', 'prefeito', '54', '1', True),
-        #             (21, 'zé moço', '321', '35', 'vereador', '99', '7', True)]
 
         if results:
             with open('reports/eleitos.txt', 'w') as file:
                 file.write('CANDIDATOS ELEITOS:\n')
-                line_to_write = "| {} | {} | {} | {} | {} | {} | {} |".format(
+                line_to_write = "| {} | {} | {} | {} | {} | {} | {} | {} |".format(
                                                                                 'ID'.center(10),
                                                                                 'NOME'.center(30),
                                                                                 'ID_VICE'.center(10),
                                                                                 'ID_PLEITO'.center(10),
-                                                                                'CARGO'.center(15),
+                                                                                'CARGO'.center(22),
+                                                                                'CARGO_ID'.center(10),
                                                                                 'VOTOS'.center(7),
                                                                                 'ELEITOS'.center(9)
                                                                             )
                 file.write(line_to_write)
                 file.write('\n')
-                file.write('-'*115)
+                file.write('-'*135)
                 file.write('\n')
-                spacing = [10, 30, 10, 10, 15, 7, 9]
+                spacing = [10, 30, 10, 10, 22, 10, 7, 9]
                 for line in results:
                     line = line[0:-1]
                     file.write('| ')
@@ -198,9 +201,10 @@ class PostgreSQLOperations:
         self.connection.commit()
 
     def display_ficha_limpa(self):
-        sql = f"""SELECT cpf, nome,
+        sql = f"""SELECT cpf, nome
                   FROM individuos
-                  WHERE ficha_limpa = TRUE"""
+                  WHERE ficha_limpa = TRUE
+                  LIMIT 1000"""
         try:
             self.cursor.execute(sql)
             results = self.cursor.fetchall()
@@ -211,10 +215,12 @@ class PostgreSQLOperations:
 
         print('LISTAGEM DE INDIVÍDUOS COM A FICHA LIMPA:')
         print('|', 'CPF'.center(13), '|', 'NOME'.center(30), '|')
+        print('-'*50)
         spacing = [13, 30]
         if results:
             for line in results:
                 for field, space in zip(line, spacing):
-                    print('| ', str(field).center(space), end=' ')
-                    print('\n')
+                    print('|', str(field).center(space), end=' ')
+                print('|')
+                print('\n')
         self.connection.commit()
