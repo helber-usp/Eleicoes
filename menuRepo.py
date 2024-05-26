@@ -62,7 +62,7 @@ class ChoiceInteractor:
             else:
                 os.system('cls' if os.name == 'nt' else 'clear')
                 mode_choice = input('\nDigite 0 para deletar todos os dados da tabela, ou então digite o nome da coluna e o valor \
-                                    da linha para ser deletada, separado por virgula:')
+da linha para ser deletada, separado por virgula:')
                 if mode_choice == '0':
                     self.operator.delete_data(option_assign[table_choice])
                     input('\nPressione qualquer tecla para voltar ao menu\n')
